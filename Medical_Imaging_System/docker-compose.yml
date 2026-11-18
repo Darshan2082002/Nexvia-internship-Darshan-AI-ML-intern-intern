@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # 1. The DICOM Server
+  orthanc:
+    image: jodogne/orthanc-plugins
+    ports:
+      - "8042:8042"
+    restart: unless-stopped
+
+  # 2. The AI Inference Worker
+  inference-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    command: python inference_service.py
+    depends_on:
+      - orthanc
+    volumes:
+      - shared_assets:/app/medical-viewer/public/assets
+
+  # 3. The FastAPI Server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    command: uvicorn api:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - shared_assets:/app/medical-viewer/public/assets
+
+  # 4. The React Frontend
+  frontend:
+    build:
+      context: ./medical-viewer
+      dockerfile: Dockerfile
+    ports:
+      - "5174:5174"
+    depends_on:
+      - api
+    volumes:
+      # Map the shared volume directly to Vite's public folder
+      - shared_assets:/app/public/assets
+
+volumes:
+  shared_assets:

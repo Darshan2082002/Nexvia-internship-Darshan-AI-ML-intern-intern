@@ -1,0 +1,3 @@
+[submodule "autonomous-perception-stack"]
+	path = autonomous-perception-stack
+	url = https://github.com/Darshan2082002/autonomous-perception-stack.git
